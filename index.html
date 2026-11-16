@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BI AI Agent — Hệ thống Phân tích & Làm sạch Dữ liệu (Human-in-the-Loop)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <!-- TOP NAVIGATION & WORKFLOW HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-8a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"/>
+          <circle cx="9" cy="13" r="1.5" fill="currentColor"/>
+          <circle cx="15" cy="13" r="1.5" fill="currentColor"/>
+          <path d="M9 17h6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">Enterprise BI AI Agent <span class="badge-hitl">AI & Human-in-the-Loop</span></div>
+        <div class="brand-subtitle">Hệ thống Phân tích Bối cảnh, Chuẩn hóa, Làm sạch Dữ liệu & Khởi tạo Dashboard Tự động</div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="btn-chip" onclick="resetWorkspace()" title="Xóa toàn bộ dữ liệu đang nhập và bắt đầu phiên phân tích mới">
+        🔄 Phiên làm việc mới (Làm trống)
+      </button>
+    </div>
+  </header>
+
+  <!-- 4-STEP PIPELINE STEPPER -->
+  <section class="workflow-bar">
+    <div class="workflow-container">
+      <div class="wf-step active" id="wfStep1" onclick="jumpToStep(1)">
+        <div class="wf-num">1</div>
+        <div class="wf-info">
+          <div class="wf-title">BƯỚC 1: BỐI CẢNH & ĐỊNH DẠNG</div>
+          <div class="wf-desc">Nhận dữ liệu • Kiểm tra đúng/sai định dạng</div>
+        </div>
+        <span class="wf-status" id="wfStatus1">Đang thực hiện</span>
+      </div>
+
+      <div class="wf-arrow">→</div>
+
+      <div class="wf-step" id="wfStep2" onclick="jumpToStep(2)">
+        <div class="wf-num">2</div>
+        <div class="wf-info">
+          <div class="wf-title">BƯỚC 2: LÀM SẠCH & XÁC NHẬN</div>
+          <div class="wf-desc">Phát hiện lỗi • Sửa thủ công / AI làm sạch lại</div>
+        </div>
+        <span class="wf-status" id="wfStatus2">Chờ</span>
+      </div>
+
+      <div class="wf-arrow">→</div>
+
+      <div class="wf-step" id="wfStep3" onclick="jumpToStep(3)">
+        <div class="wf-num">3</div>
+        <div class="wf-info">
+          <div class="wf-title">BƯỚC 3: PHÂN TÍCH & FEEDBACK</div>
+          <div class="wf-desc">AI đánh giá BI • Xác nhận Feedback OKE</div>
+        </div>
+        <span class="wf-status" id="wfStatus3">Chờ</span>
+      </div>
+
+      <div class="wf-arrow">→</div>
+
+      <div class="wf-step" id="wfStep4" onclick="jumpToStep(4)">
+        <div class="wf-num">4</div>
+        <div class="wf-info">
+          <div class="wf-title">BƯỚC 4: BÁO CÁO & DASHBOARD</div>
+          <div class="wf-desc">Xuất bản BI Dashboard & Executive Report</div>
+        </div>
+        <span class="wf-status" id="wfStatus4">Chờ</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN WORKSPACE CONTAINER -->
+  <main class="main-container">
+
+    <!-- =================================================================== -->
+    <!-- STEP 1: PHÂN TÍCH BỐI CẢNH & KIỂM TRA ĐỊNH DẠNG                      -->
+    <!-- =================================================================== -->
+    <section id="panelStep1" class="step-panel active">
+      <div class="two-col-layout">
+        <!-- Left Card: Business Context -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="step-pill pill-blue">BƯỚC 1A</span>
+              <h2>Bối cảnh Doanh nghiệp (Business Context)</h2>
+            </div>
+            <span class="card-hint">Nhập thông tin bối cảnh để AI phân tích sát thực tế</span>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="ctxCompany">Tên Doanh nghiệp / Dự án</label>
+              <input type="text" id="ctxCompany" value="" placeholder="Nhập tên công ty hoặc dự án của bạn..." />
+            </div>
+            <div class="form-group">
+              <label for="ctxIndustry">Ngành nghề / Lĩnh vực hoạt động</label>
+              <input type="text" id="ctxIndustry" list="industrySuggestions" value="" placeholder="Chọn hoặc tự nhập ngành nghề kinh doanh..." />
+              <datalist id="industrySuggestions">
+                <option value="Tài chính & Quản trị Doanh nghiệp (Corporate Finance)"></option>
+                <option value="Bán lẻ & Phân phối (Retail & Distribution)"></option>
+                <option value="Thương mại điện tử (E-Commerce)"></option>
+                <option value="Công nghệ SaaS & Dịch vụ B2B"></option>
+                <option value="Sản xuất & Chuỗi cung ứng (Manufacturing)"></option>
+                <option value="Bất động sản & Xây dựng"></option>
+                <option value="Nhân sự, Vận hành & Dịch vụ"></option>
+              </datalist>
+            </div>
+            <div class="form-group full-width">
+              <label for="ctxAudience">Đối tượng xem Báo cáo / Dashboard</label>
+              <input type="text" id="ctxAudience" value="" placeholder="VD: Ban Giám đốc (CEO / CFO), Trưởng phòng Kinh doanh..." />
+            </div>
+            <div class="form-group full-width">
+              <label for="ctxObjective">Bối cảnh & Mục tiêu Phân tích Số liệu</label>
+              <textarea id="ctxObjective" rows="4" placeholder="Mô tả bối cảnh hiện tại của doanh nghiệp và mục tiêu phân tích (VD: Phân tích doanh thu, chi phí, công nợ, dòng tiền hoặc hiệu suất bán hàng...)"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Card: Raw Data Input -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="step-pill pill-blue">BƯỚC 1B</span>
+              <h2>Dữ liệu Đầu vào (Raw Data Input)</h2>
+            </div>
+            <div class="upload-actions">
+              <label class="btn-outline-sm" for="fileUploadInput">
+                📁 Tải file lên (CSV / Excel / JSON)
+              </label>
+              <input type="file" id="fileUploadInput" accept=".csv,.tsv,.txt,.xlsx,.xls,.json" style="display:none" onchange="handleFileUpload(event)" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rawInputText">
+              Nhập hoặc dán dữ liệu của bạn vào bên dưới (CSV, Bảng copy từ Excel, JSON hoặc văn bản số liệu)
+            </label>
+            <textarea id="rawInputText" class="code-textarea" rows="10" placeholder="Dán dữ liệu của bạn vào đây hoặc bấm 'Tải file lên (CSV / Excel / JSON)' ở góc phải..."></textarea>
+          </div>
+
+          <div class="action-bar-right">
+            <button class="btn-primary btn-lg" onclick="runStep1Validation()">
+              🔍 Phân Tích Bối Cảnh & Kiểm Tra Định Dạng
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 1 RESULT & DECISION GATE (ĐÚNG ĐỊNH DẠNG? ĐÚNG vs SAI) -->
+      <div id="step1ResultBox" class="decision-container hidden"></div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- STEP 2: LÀM SẠCH DỮ LIỆU & XÁC NHẬN (HUMAN-IN-THE-LOOP)              -->
+    <!-- =================================================================== -->
+    <section id="panelStep2" class="step-panel">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="step-pill pill-orange">BƯỚC 2</span>
+            <h2>Phát hiện Lỗi & Làm sạch Dữ liệu Thô (AI Data Cleaning)</h2>
+          </div>
+          <div id="step2ScoreBadges" class="score-badges"></div>
+        </div>
+
+        <div id="step2SummaryRow" class="cleaning-kpi-grid"></div>
+        <div id="step2CustomRulesLog" class="custom-rules-banner hidden"></div>
+
+        <div class="two-col-cleaning">
+          <!-- Left: Detected Issues List -->
+          <div class="subcard">
+            <div class="subcard-title">
+              <span>🛠️ Danh sách Lỗi Dữ liệu AI đã Phát hiện & Làm sạch</span>
+              <span class="issue-count-pill" id="issueCountPill">0 lỗi</span>
+            </div>
+            <div id="issuesListContainer" class="issues-list"></div>
+          </div>
+
+          <!-- Right: Interactive Cleaned Data Table -->
+          <div class="subcard">
+            <div class="subcard-title">
+              <span>📋 Bảng Dữ liệu Sau Làm Sạch (Click vào ô bất kỳ để sửa thủ công)</span>
+              <div class="table-Quick-actions">
+                <button class="btn-xs" onclick="addNewRowStep2()">+ Thêm dòng</button>
+                <button class="btn-xs" onclick="downloadCleanedCSV()">⬇ Tải CSV sạch</button>
+              </div>
+            </div>
+            <div class="table-scroll-wrapper" id="cleanedTableContainer"></div>
+          </div>
+        </div>
+
+        <!-- HUMAN-IN-THE-LOOP CONFIRMATION GATE FOR STEP 2 -->
+        <div class="hitl-gate-box gate-orange">
+          <div class="hitl-gate-header">
+            <div class="hitl-icon">🤖 ⇄ 👤</div>
+            <div>
+              <h3>Xác nhận Kết quả Làm sạch Dữ liệu (Xác nhận Đạt?)</h3>
+              <p>Kiểm tra dữ liệu đã làm sạch ở trên. Nếu đã đạt yêu cầu, bấm <strong>"Xác nhận ĐẠT"</strong> để sang Bước 3. Nếu chưa đạt, bạn có thể sửa trực tiếp trên bảng hoặc yêu cầu AI làm sạch lại theo ý muốn.</p>
+            </div>
+          </div>
+
+          <div class="hitl-actions-row">
+            <button class="btn-success btn-lg" onclick="confirmStep2AndGoStep3()">
+              ✅ Xác nhận ĐẠT — Chuyển sang Bước 3 (Phân tích BI)
+            </button>
+            <button class="btn-warning" onclick="toggleStep2ReCleanBox()">
+              ✏️ CHƯA ĐẠT — Sửa thủ công / Yêu cầu AI làm sạch lại
+            </button>
+          </div>
+
+          <div id="step2ReCleanBox" class="reclean-drawer hidden">
+            <div class="reclean-grid">
+              <div class="reclean-option">
+                <h4>Cách 1: Sửa trực tiếp thủ công trên bảng</h4>
+                <p>Nhấp chuột trực tiếp vào bất kỳ ô nào trong <strong>Bảng Dữ liệu Sau Làm Sạch</strong> phía trên để chỉnh sửa giá trị. Mọi thay đổi được cập nhật ngay lập tức.</p>
+                <button class="btn-outline-sm" onclick="focusEditableTable()">👆 Di chuyển tới bảng để sửa thủ công</button>
+              </div>
+              <div class="reclean-option">
+                <h4>Cách 2: Yêu cầu AI làm sạch lại theo ý muốn</h4>
+                <p>Nhập quy tắc xử lý bạn muốn AI thực hiện lại trên dữ liệu:</p>
+                <div class="quick-prompt-chips">
+                  <button class="chip-prompt" onclick="setReCleanPrompt('Điền các ô trống (Missing values) bằng 0')">Điền ô trống = 0</button>
+                  <button class="chip-prompt" onclick="setReCleanPrompt('Điền các ô trống bằng giá trị Trung bình (Mean) của cột')">Điền ô trống = Trung bình</button>
+                  <button class="chip-prompt" onclick="setReCleanPrompt('Chuyển toàn bộ giá trị âm bất thường về giá trị dương')">Chuẩn hóa số âm</button>
+                  <button class="chip-prompt" onclick="setReCleanPrompt('Làm tròn tất cả các cột số về số nguyên')">Làm tròn số nguyên</button>
+                </div>
+                <div class="prompt-input-row">
+                  <input type="text" id="customCleanInput" placeholder="Nhập yêu cầu làm sạch lại của bạn cho AI..." />
+                  <button class="btn-primary" onclick="runCustomAiReClean()">✨ AI Làm Sạch Lại</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- STEP 3: PHÂN TÍCH DỮ LIỆU & ĐÁNH GIÁ (FEEDBACK LOOP)                 -->
+    <!-- =================================================================== -->
+    <section id="panelStep3" class="step-panel">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="step-pill pill-teal">BƯỚC 3</span>
+            <h2>Phân tích Dữ liệu Sạch & Đánh giá Chiến lược (AI BI Feedback)</h2>
+          </div>
+          <span class="card-hint" id="step3SummaryHint"></span>
+        </div>
+
+        <div id="step3FeedbackContainer" class="feedback-sections-grid"></div>
+
+        <!-- HUMAN-IN-THE-LOOP CONFIRMATION GATE FOR STEP 3 -->
+        <div class="hitl-gate-box gate-teal">
+          <div class="hitl-gate-header">
+            <div class="hitl-icon">🤖 ⇄ 👤</div>
+            <div>
+              <h3>Đánh giá Phân tích & Feedback của AI (Feedback OKE?)</h3>
+              <p>Nếu bạn đồng ý với kết quả phân tích và nhận định của AI, hãy chọn tạo <strong>BI Dashboard</strong> hoặc <strong>Báo cáo (Report)</strong>. Nếu chưa OKE, hãy yêu cầu AI điều chỉnh và phân tích lại.</p>
+            </div>
+          </div>
+
+          <div class="hitl-actions-row">
+            <button class="btn-success btn-lg" onclick="confirmStep3AndGoStep4('dashboard')">
+              📊 Feedback OKE — Tạo BI Dashboard Trực Quan (Bước 4)
+            </button>
+            <button class="btn-primary btn-lg" onclick="confirmStep3AndGoStep4('report')">
+              📑 Feedback OKE — Xuất Báo Cáo Phân Tích (Executive Report)
+            </button>
+            <button class="btn-warning" onclick="toggleStep3AdjustBox()">
+              🔄 CHƯA OKE — Điều chỉnh & Yêu cầu AI Phân tích lại
+            </button>
+          </div>
+
+          <div id="step3AdjustBox" class="reclean-drawer hidden">
+            <h4>Nhập yêu cầu điều chỉnh góc nhìn hoặc bổ sung phân tích cho AI Agent:</h4>
+            <div class="prompt-input-row" style="margin-top:10px;">
+              <input type="text" id="step3FeedbackInput" placeholder="Nhập phản hồi của bạn để AI điều chỉnh và phân tích lại..." />
+              <button class="btn-primary" onclick="runStep3ReAnalysis()">🧠 AI Phân Tích Lại</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- STEP 4: TẠO BÁO CÁO & DASHBOARD (EXECUTIVE BI DASHBOARD & REPORT)   -->
+    <!-- =================================================================== -->
+    <section id="panelStep4" class="step-panel">
+      <div class="exec-dashboard-shell" id="execDashboardShell">
+        <div class="exec-topbar">
+          <div class="exec-topbar-left">
+            <button class="exec-back-btn" onclick="jumpToStep(3)" title="Quay lại Bước 3">←</button>
+            <span class="exec-divider">|</span>
+            <h1 class="exec-title" id="dashMainTitle">BI Dashboard</h1>
+            <span class="exec-info-icon" title="Executive BI Dashboard được tạo từ dữ liệu đã làm sạch của bạn">ⓘ</span>
+            <span class="exec-domain-tag" id="dashDomainSubtitle">Business Intelligence</span>
+          </div>
+
+          <div class="exec-topbar-right">
+            <div class="view-mode-tabs">
+              <button class="view-tab active" id="tabViewDashboard" onclick="switchStep4View('dashboard')">
+                📊 Bảng điều khiển (Dashboard)
+              </button>
+              <button class="view-tab" id="tabViewReport" onclick="switchStep4View('report')">
+                📑 Báo cáo Chi tiết (BI Report)
+              </button>
+            </div>
+            <button class="exec-icon-btn" onclick="window.print()" title="In hoặc Lưu PDF Báo cáo / Dashboard">🖨️ Xuất PDF / In</button>
+            <button class="exec-icon-btn" onclick="downloadCleanedCSV()" title="Tải dữ liệu sạch (CSV)">⬇ CSV</button>
+          </div>
+        </div>
+
+        <!-- VIEW 1: VISUAL BI DASHBOARD (POWER BI STYLE WITH DYNAMIC SLICERS) -->
+        <div id="step4DashboardView" class="exec-dashboard-content">
+          <!-- DYNAMIC SLICERS BAR -->
+          <div class="exec-slicer-bar" id="execSlicerBar">
+            <!-- Populated dynamically based on dataset columns -->
+          </div>
+
+          <!-- ROW 1: 4 EXECUTIVE KPI CARDS -->
+          <div class="exec-kpi-row-full" id="execKpiRow"></div>
+
+          <!-- ROW 2: LEFT (KEY OPERATIONAL GAUGES / DONUT) + RIGHT (AGGREGATED CATEGORY BAR CHART) -->
+          <div class="exec-top-grid">
+            <div class="exec-left-metrics">
+              <div class="exec-gauge-row" id="execGaugeRow"></div>
+            </div>
+
+            <div class="exec-aging-card">
+              <div class="exec-chart-header">
+                <div class="exec-chart-title" id="agingChartTitle">Phân bổ theo Danh mục Trọng tâm</div>
+                <span class="exec-chart-badge" id="agingChartSubtitle">Tổng hợp theo nhóm</span>
+              </div>
+              <div class="exec-chart-canvas-wrap aging-wrap">
+                <canvas id="chartAging"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- ROW 3: BOTTOM CHARTS (MONTHLY/PERIOD TREND + TOP 10 / MULTI-METRIC SUMMARY) -->
+          <div class="exec-bottom-grid">
+            <div class="exec-bottom-card">
+              <div class="exec-chart-header">
+                <div class="exec-chart-title" id="wcChartTitle">Xu hướng Biến động theo Thời gian / Kỳ</div>
+                <span class="exec-chart-badge" id="wcChartSubtitle">Tổng hợp theo kỳ</span>
+              </div>
+              <div class="exec-chart-canvas-wrap bottom-wrap">
+                <canvas id="chartWorkingCapital"></canvas>
+              </div>
+            </div>
+
+            <div class="exec-bottom-card">
+              <div class="exec-chart-header">
+                <div class="exec-chart-title" id="pnlChartTitle">Top Phân bổ Quy mô & Hiệu suất</div>
+                <span class="exec-chart-badge" id="pnlChartSubtitle">Top 10 nhóm dẫn đầu</span>
+              </div>
+              <div class="exec-chart-canvas-wrap bottom-wrap">
+                <canvas id="chartPnL"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 2: EXECUTIVE BI REPORT VIEW -->
+        <div id="step4ReportView" class="exec-report-content hidden">
+          <div id="executiveReportContainer"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
